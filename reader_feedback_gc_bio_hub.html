@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reader Feedback & Bio Hub - Vivisha Sharma</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Instrument Serif"', 'serif'],
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        paper: '#FDFBF7',
+                        ink: '#1C1917',
+                        clay: '#8C6D58',
+                        sage: '#6B7A6A',
+                        sand: '#EFECE6',
+                        cream: '#F7F4EE',
+                        accent: '#2A2723'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FDFBF7;
+            color: #1C1917;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-image: radial-gradient(#E5E0D8 0.75px, transparent 0.75px);
+            background-size: 16px 16px;
+        }
+        .serif-title {
+            font-family: 'Instrument Serif', serif;
+        }
+        .paper-card {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(28, 25, 23, 0.08);
+            box-shadow: 0 10px 30px -10px rgba(28, 25, 23, 0.05);
+        }
+        .chapter-text-body {
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: 'Instrument Serif', serif;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #1C1917;
+        }
+        .chapter-text-body em, .chapter-text-body i {
+            font-style: italic;
+        }
+        .chapter-text-body strong, .chapter-text-body b {
+            font-weight: 700;
+        }
+        .btn-editorial {
+            background: #1C1917;
+            color: #FDFBF7;
+            transition: all 0.2s ease;
+        }
+        .btn-editorial:hover {
+            background: #36322E;
+            transform: translateY(-1px);
+        }
+        .chip {
+            transition: all 0.15s ease;
+        }
+        .chip.selected {
+            background-color: #1C1917;
+            color: #FDFBF7;
+            border-color: #1C1917;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.15); }
+        }
+        .badge-pulse {
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D4CEB8;
+            border-radius: 99px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-4 sm:p-6 md:p-8 selection:bg-stone-200">
+
+    <header class="w-full max-w-xl flex items-center justify-between mb-6 px-2">
+        <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
+            <span class="text-xs tracking-wider uppercase font-semibold text-stone-500" id="liveSyncStatus">Live Sync Active</span>
+        </div>
+        <button id="toggleViewBtn" onclick="toggleAuthorView()" class="relative text-xs font-semibold px-3.5 py-1.5 rounded-full border border-stone-300 hover:border-stone-800 transition-colors flex items-center gap-2 bg-white/60">
+            <i class="fa-solid fa-sliders text-[11px] text-stone-600"></i>
+            <span id="viewBtnText">Author Control Panel</span>
+            <span id="unreadNotifBadge" class="hidden absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-bold h-5 min-w-[20px] px-1 rounded-full flex items-center justify-center border-2 border-white badge-pulse">0</span>
+        </button>
+    </header>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-xl space-y-6">
+
+        <section class="paper-card rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-stone-800"></div>
+
+            <div class="flex flex-col items-center text-center">
+                <div class="relative mb-4">
+                    <img id="authorAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250" alt="Author Profile" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-stone-200 shadow-sm">
+                    <span id="bookStatusBadge" class="absolute bottom-0 right-0 bg-stone-900 text-stone-100 text-[10px] px-2 py-0.5 rounded-full font-mono border border-stone-100">WIP</span>
+                </div>
+
+                <h1 id="bookTitleDisplay" class="serif-title text-3xl sm:text-4xl italic font-normal text-stone-900 mb-1">Whispers in the Glass</h1>
+                <p id="authorNameDisplay" class="text-xs uppercase tracking-widest text-stone-500 font-semibold mb-2">by Vivisha Sharma (@prateusha26)</p>
+                
+                <div id="genreBadgesContainer" class="flex flex-wrap justify-center gap-1.5 mb-3">
+                    <span class="px-2.5 py-0.5 bg-stone-100 text-stone-600 rounded-full text-[10px] font-medium border border-stone-200">Dark Academia</span>
+                    <span class="px-2.5 py-0.5 bg-stone-100 text-stone-600 rounded-full text-[10px] font-medium border border-stone-200">Romantasy</span>
+                </div>
+
+                <p id="bookBioDisplay" class="text-sm text-stone-600 leading-relaxed max-w-md italic mb-5">
+                    "Chapter 14 draft is out! Read the chapter directly below or drop your unfiltered thoughts, reactions, and theory notes!"
+                </p>
+
+                <div id="socialLinksContainer" class="w-full grid grid-cols-2 gap-2 sm:gap-3 pt-2">
+                    <a id="gcLink" href="https://instagram.com" target="_blank" class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl bg-stone-100 hover:bg-stone-200/80 text-stone-800 text-xs font-semibold transition-all border border-stone-200/60">
+                        <i id="gcIcon" class="fa-brands fa-instagram text-base text-pink-600"></i>
+                        <span id="gcBtnLabel">Join Reader Channel</span>
+                    </a>
+                    <a id="socialLink" href="https://instagram.com/prateusha26" target="_blank" class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl bg-stone-100 hover:bg-stone-200/80 text-stone-800 text-xs font-semibold transition-all border border-stone-200/60">
+                        <i class="fa-brands fa-instagram text-base text-pink-600"></i>
+                        <span id="socialBtnLabel">@prateusha26</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="chapterReaderSection" class="paper-card rounded-3xl p-6 sm:p-8 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-200/60">
+                <div>
+                    <span class="text-[10px] uppercase font-bold tracking-widest text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">Story Reader</span>
+                    <h2 class="serif-title text-2xl text-stone-900 mt-1" id="activeChapterTitle">Chapter 14: The Whispering Library</h2>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <select id="readerChapterSelector" onchange="switchReadingChapter(this.value)" class="px-3 py-1.5 rounded-xl bg-stone-100 border border-stone-300 text-xs font-medium text-stone-800 focus:outline-none cursor-pointer">
+                    </select>
+                </div>
+            </div>
+
+            <div id="chapterContentDisplay" class="chapter-text-body bg-amber-50/30 p-5 sm:p-6 rounded-2xl border border-stone-200/50">
+                <p class="text-stone-400 italic">Loading chapter content...</p>
+            </div>
+
+            <div class="pt-2 flex justify-between items-center text-xs text-stone-500">
+                <span class="italic"><i class="fa-regular fa-clock mr-1"></i> Vivisha's Draft Preview</span>
+                <a href="#feedbackFormSection" class="text-stone-800 font-semibold hover:underline flex items-center gap-1">
+                    <span>Drop feedback on this chapter</span>
+                    <i class="fa-solid fa-arrow-down text-[10px]"></i>
+                </a>
+            </div>
+        </section>
+
+        <section class="paper-card rounded-3xl p-6">
+            <h2 class="serif-title text-xl text-stone-900 mb-1">Quick Vibe Check</h2>
+            <p class="text-xs text-stone-500 mb-4">How are you feeling after the latest update?</p>
+            
+            <div class="grid grid-cols-4 gap-2" id="vibeCheckContainer">
+                <button onclick="voteVibe(this, 'mindblown')" class="vibe-btn flex flex-col items-center justify-center p-3 rounded-2xl border border-stone-200 hover:border-stone-400 bg-stone-50/50 transition-all active:scale-95">
+                    <span class="text-2xl mb-1">🤯</span>
+                    <span class="text-[11px] font-medium text-stone-600">Mindblown</span>
+                    <span class="text-[10px] text-stone-400 mt-1 font-mono vote-count" id="count-mindblown">14</span>
+                </button>
+                <button onclick="voteVibe(this, 'screaming')" class="vibe-btn flex flex-col items-center justify-center p-3 rounded-2xl border border-stone-200 hover:border-stone-400 bg-stone-50/50 transition-all active:scale-95">
+                    <span class="text-2xl mb-1">😱</span>
+                    <span class="text-[11px] font-medium text-stone-600">Screaming</span>
+                    <span class="text-[10px] text-stone-400 mt-1 font-mono vote-count" id="count-screaming">28</span>
+                </button>
+                <button onclick="voteVibe(this, 'crying')" class="vibe-btn flex flex-col items-center justify-center p-3 rounded-2xl border border-stone-200 hover:border-stone-400 bg-stone-50/50 transition-all active:scale-95">
+                    <span class="text-2xl mb-1">😭</span>
+                    <span class="text-[11px] font-medium text-stone-600">Crying</span>
+                    <span class="text-[10px] text-stone-400 mt-1 font-mono vote-count" id="count-crying">42</span>
+                </button>
+                <button onclick="voteVibe(this, 'suspicious')" class="vibe-btn flex flex-col items-center justify-center p-3 rounded-2xl border border-stone-200 hover:border-stone-400 bg-stone-50/50 transition-all active:scale-95">
+                    <span class="text-2xl mb-1">🧐</span>
+                    <span class="text-[11px] font-medium text-stone-600">Theory Time</span>
+                    <span class="text-[10px] text-stone-400 mt-1 font-mono vote-count" id="count-suspicious">19</span>
+                </button>
+            </div>
+        </section>
+
+        <section id="feedbackFormSection" class="paper-card rounded-3xl p-6 sm:p-8">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-stone-200/60">
+                <div>
+                    <h2 class="serif-title text-2xl text-stone-900">Reader Notes & Thoughts</h2>
+                    <p class="text-xs text-stone-500">Unfiltered feedback, theories, or reactions.</p>
+                </div>
+                <span class="text-xs bg-stone-100 text-stone-700 px-2.5 py-1 rounded-full font-medium border border-stone-200">Anon Friendly</span>
+            </div>
+
+            <form id="readerFeedbackForm" onsubmit="submitFeedback(event)" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-600 mb-1">Your Name / Handle</label>
+                        <input type="text" id="readerName" placeholder="e.g. @bookish_sarah" class="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-900 focus:outline-none focus:border-stone-800 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-600 mb-1">Which Chapter?</label>
+                        <select id="chapterSelect" class="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-900 focus:outline-none focus:border-stone-800 transition-colors">
+                            <option value="General / Overall Book">General / Overall WIP</option>
+                            <option value="Chapter 12">Chapter 12</option>
+                            <option value="Chapter 13">Chapter 13</option>
+                            <option value="Chapter 14 (Latest)" selected>Chapter 14 (Latest)</option>
+                            <option value="Chapter 15 (Sneak Peek)">Chapter 15 (Sneak Peek)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-stone-600 mb-1.5">What is this about?</label>
+                    <div class="flex flex-wrap gap-1.5" id="tagChipsContainer">
+                        <button type="button" onclick="toggleTag(this, 'Pacing')" class="chip px-3 py-1 rounded-full border border-stone-200 text-stone-600 text-xs font-medium">⚡ Pacing</button>
+                        <button type="button" onclick="toggleTag(this, 'Character Dynamics')" class="chip px-3 py-1 rounded-full border border-stone-200 text-stone-600 text-xs font-medium">👀 Character Dynamics</button>
+                        <button type="button" onclick="toggleTag(this, 'Plot Theory')" class="chip px-3 py-1 rounded-full border border-stone-200 text-stone-600 text-xs font-medium">🔮 Plot Theory</button>
+                        <button type="button" onclick="toggleTag(this, 'Emotional Damage')" class="chip px-3 py-1 rounded-full border border-stone-200 text-stone-600 text-xs font-medium">💔 Emotional Reaction</button>
+                        <button type="button" onclick="toggleTag(this, 'Grammar/Typos')" class="chip px-3 py-1 rounded-full border border-stone-200 text-stone-600 text-xs font-medium">✍️ Typos / Edits</button>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-stone-50 rounded-2xl border border-stone-200/60 flex items-center justify-between">
+                    <span class="text-xs font-semibold text-stone-700">How high was the tension in this part?</span>
+                    <div class="flex gap-1 text-amber-500 text-sm" id="starRating">
+                        <i class="fa-solid fa-star cursor-pointer" onclick="setRating(1)"></i>
+                        <i class="fa-solid fa-star cursor-pointer" onclick="setRating(2)"></i>
+                        <i class="fa-solid fa-star cursor-pointer" onclick="setRating(3)"></i>
+                        <i class="fa-solid fa-star cursor-pointer" onclick="setRating(4)"></i>
+                        <i class="fa-regular fa-star cursor-pointer text-stone-300" onclick="setRating(5)"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-stone-600 mb-1">Your Feedback & Thoughts</label>
+                    <textarea id="feedbackText" rows="4" required placeholder="Be as detailed or feral as you want... Vivisha reads every single note!" class="w-full p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-900 focus:outline-none focus:border-stone-800 transition-colors leading-relaxed resize-none"></textarea>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full btn-editorial py-3 rounded-2xl text-xs font-semibold tracking-wide uppercase flex items-center justify-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                    <span>Send Notes To Vivisha</span>
+                </button>
+            </form>
+        </section>
+
+        <section id="authorDashboardSection" class="paper-card rounded-3xl p-6 sm:p-8 hidden space-y-6">
+            <div class="flex items-center justify-between pb-4 border-b border-stone-200">
+                <div>
+                    <h2 class="serif-title text-2xl text-stone-900">Author Control Panel</h2>
+                    <p class="text-xs text-stone-500">Live feedback inbox & profile setup for bio links.</p>
+                </div>
+                <button onclick="copyBioLink()" class="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-xs font-semibold border border-stone-300 transition-colors flex items-center gap-1.5">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>Copy Link for Bio</span>
+                </button>
+            </div>
+
+            <!-- Chapter Manager Accordion -->
+            <details class="group bg-amber-50/40 rounded-2xl border border-amber-200/80 p-4 transition-all">
+                <summary class="cursor-pointer font-semibold text-xs text-stone-900 flex justify-between items-center list-none">
+                    <span><i class="fa-solid fa-feather-pointed mr-1.5 text-amber-700"></i> Add & Edit Book Chapters (Reader Preview)</span>
+                    <i class="fa-solid fa-chevron-down text-stone-400 group-open:rotate-180 transition-transform text-xs"></i>
+                </summary>
+                <div class="mt-4 space-y-4 pt-3 border-t border-amber-200/60">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-[11px] font-semibold text-stone-700">Select Chapter to Edit or Create New</label>
+                        <button type="button" onclick="prepareNewChapter()" class="text-[11px] bg-stone-900 text-white px-2.5 py-1 rounded-lg font-medium hover:bg-stone-800">
+                            + Add New Chapter
+                        </button>
+                    </div>
+
+                    <div>
+                        <select id="authorChapterSelect" onchange="loadChapterIntoEditor(this.value)" class="w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none">
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-semibold text-stone-600 mb-1">Chapter Title / Heading</label>
+                        <input type="text" id="editChapterTitleInput" placeholder="e.g. Chapter 14: The Whispering Library" class="w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none focus:border-stone-800">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-semibold text-stone-600 mb-1">Chapter Story Text / Draft Excerpt</label>
+                        <textarea id="editChapterBodyInput" rows="8" placeholder="Paste your chapter text, sneak peek draft, or story excerpt here..." class="w-full p-3 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none focus:border-stone-800 font-serif leading-relaxed"></textarea>
+                    </div>
+
+                    <div class="flex gap-2 justify-end">
+                        <button type="button" onclick="deleteCurrentChapter()" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-medium border border-red-200">
+                            Delete Chapter
+                        </button>
+                        <button type="button" onclick="saveAuthorChapter()" class="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold shadow-sm">
+                            Publish / Save Chapter
+                        </button>
+                    </div>
+                </div>
+            </details>
+
+            <!-- Profile & Book Settings Accordion -->
+            <details open class="group bg-stone-50 rounded-2xl border border-stone-200 p-4 transition-all">
+                <summary class="cursor-pointer font-semibold text-xs text-stone-800 flex justify-between items-center list-none">
+                    <span><i class="fa-solid fa-book-bookmark mr-1.5 text-stone-500"></i> Edit Book Details, Bio & Avatar</span>
+                    <i class="fa-solid fa-chevron-down text-stone-400 group-open:rotate-180 transition-transform text-xs"></i>
+                </summary>
+                <div class="mt-4 space-y-4 pt-3 border-t border-stone-200/60">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-stone-600 mb-1.5">Profile Picture / Avatar</label>
+                        <div class="flex items-center gap-3 mb-2">
+                            <input type="text" id="editAvatarUrl" placeholder="Paste image URL here..." oninput="saveAuthorSettings()" class="flex-1 px-3 py-2 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none focus:border-stone-800">
+                            <label class="px-3 py-2 bg-stone-800 hover:bg-stone-700 text-white rounded-xl text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5">
+                                <i class="fa-solid fa-upload text-[10px]"></i>
+                                <span>Upload</span>
+                                <input type="file" id="pfpFileInput" accept="image/*" onchange="handlePfpUpload(event)" class="hidden">
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-2 pt-1">
+                            <span class="text-[10px] text-stone-400 font-medium">Presets:</span>
+                            <div class="flex gap-1.5 overflow-x-auto pb-1">
+                                <button type="button" onclick="setPresetPfp('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250')" class="w-7 h-7 rounded-full border border-stone-300 overflow-hidden"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" class="w-full h-full object-cover"></button>
+                                <button type="button" onclick="setPresetPfp('https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=250')" class="w-7 h-7 rounded-full border border-stone-300 overflow-hidden"><img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=100" class="w-full h-full object-cover"></button>
+                                <button type="button" onclick="setPresetPfp('https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=250')" class="w-7 h-7 rounded-full border border-stone-300 overflow-hidden"><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100" class="w-full h-full object-cover"></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] font-semibold text-stone-600 mb-1">Book Title</label>
+                            <input type="text" id="editBookTitle" value="Whispers in the Glass" oninput="saveAuthorSettings()" class="w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none focus:border-stone-800">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-stone-600 mb-1">Status Badge</label>
+                            <select id="editBookStatus" onchange="saveAuthorSettings()" class="w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none focus:border-stone-800">
+                                <option value="WIP" selected>WIP</option>
+                                <option value="Ongoing">Ongoing</option>
+                                <option value="Draft 2">Draft 2</option>
+                                <option value="Editing">Editing</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-stone-600 mb-1">Author Name / Handle</label>
+                            <input type="text" id="editAuthorName" value="by Vivisha Sharma (@prateusha26)" oninput="saveAuthorSettings()" class="w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none focus:border-stone-800">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-stone-600 mb-1">Genres (comma separated)</label>
+                            <input type="text" id="editGenres" value="Dark Academia, Romantasy, Mystery" oninput="saveAuthorSettings()" class="w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none focus:border-stone-800">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-semibold text-stone-600 mb-1">Announcement Bio / Update Note</label>
+                        <textarea id="editBioText" rows="2" oninput="saveAuthorSettings()" class="w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none focus:border-stone-800">Chapter 14 draft is out! Join our reader GC or drop your unfiltered thoughts, reactions, and theory notes below.</textarea>
+                    </div>
+
+                    <div class="pt-2 border-t border-stone-200/60">
+                        <label class="block text-[11px] font-semibold text-stone-700 mb-2">Group Chat & Platform Links</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] text-stone-500 mb-1">Group Chat / Reader Channel Platform</label>
+                                <select id="editGcPlatform" onchange="saveAuthorSettings()" class="w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none mb-2">
+                                    <option value="instagram" selected>Instagram Channel / Broadcast</option>
+                                    <option value="whatsapp">WhatsApp Group / Channel</option>
+                                    <option value="telegram">Telegram Channel</option>
+                                    <option value="wattpad">Wattpad Book / Profile</option>
+                                    <option value="custom">Other / Custom Link</option>
+                                </select>
+                                <label class="block text-[10px] text-stone-500 mb-1">GC / Channel URL</label>
+                                <input type="text" id="editGcUrl" value="https://instagram.com" oninput="saveAuthorSettings()" placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-stone-500 mb-1">Button Label</label>
+                                <input type="text" id="editGcLabel" value="Join Reader Channel" oninput="saveAuthorSettings()" placeholder="e.g. Join Reader Channel" class="w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none mb-2">
+                                <label class="block text-[10px] text-stone-500 mb-1">Author Instagram / Social URL</label>
+                                <input type="text" id="editSocialUrl" value="https://instagram.com/prateusha26" oninput="saveAuthorSettings()" placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-stone-200/60">
+                        <label class="block text-[11px] font-semibold text-stone-700 mb-1">Chapter Options (comma-separated for reader dropdown)</label>
+                        <input type="text" id="editChapterOptions" value="General / Overall WIP, Chapter 12, Chapter 13, Chapter 14 (Latest), Chapter 15 (Sneak Peek)" onchange="saveAuthorSettings()" class="w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-xs text-stone-900 focus:outline-none">
+                    </div>
+                </div>
+            </details>
+
+            <!-- Submissions Live Inbox Header -->
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-semibold text-stone-800 text-sm">Real-time Reader Inbox</h3>
+                        <span id="submissionCountBadge" class="bg-stone-900 text-white text-[11px] px-2 py-0.5 rounded-full font-mono">0</span>
+                    </div>
+                    <button onclick="markAllAsRead()" class="text-[11px] text-stone-600 hover:text-stone-900 flex items-center gap-1 font-medium">
+                        <i class="fa-solid fa-check-double text-[10px]"></i> Mark all read
+                    </button>
+                </div>
+
+                <!-- Live Submissions Feed -->
+                <div class="space-y-3" id="submissionsList">
+                    <div class="text-center py-8 text-xs text-stone-400">Loading reader notes...</div>
+                </div>
+            </div>
+        </section>
+
+        <div id="successModal" class="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-paper p-6 sm:p-8 rounded-3xl max-w-sm w-full text-center space-y-4 border border-stone-300 shadow-2xl">
+                <div class="w-12 h-12 bg-stone-900 text-stone-100 rounded-full flex items-center justify-center mx-auto text-lg">
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+                <h3 class="serif-title text-2xl text-stone-900">Notes Sent to Vivisha!</h3>
+                <p class="text-xs text-stone-600 leading-relaxed">
+                    Thank you for reading! Your feedback and reactions were sent straight to the author.
+                </p>
+                <button onclick="closeModal()" class="w-full btn-editorial py-2.5 rounded-xl text-xs font-semibold">
+                    Back to Bio Hub
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-xl text-center py-6 text-[11px] text-stone-400">
+        <p class="serif-title text-sm italic text-stone-500 mb-1">Crafted for Vivisha Sharma (@prateusha26)</p>
+        <p>© 2026 Reader Feedback Hub • Bio Link & Community Engine</p>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'vivisha-reader-hub';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "demo-key",
+            authDomain: "demo.firebaseapp.com",
+            projectId: "demo-project",
+            storageBucket: "demo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:demo"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let user = null;
+        let activeSubmissions = [];
+        let selectedTags = [];
+        let currentRating = 4;
+        let isAuthorDashboardView = false;
+
+        let activeChapters = [
+            {
+                id: 'chap-14',
+                title: 'Chapter 14: The Whispering Library',
+                content: `The moonlight streamed through the high archways of the grand conservatory, casting long shadows across the obsidian floor. Lyra traced her fingers over the silver engraving of the ancient book.\n\n"You shouldn't be here after hours," Julian's voice emerged from the shadows, quiet yet resonant.\n\n"Neither should you," she replied without turning around. "And yet, here we both are."`
+            },
+            {
+                id: 'chap-13',
+                title: 'Chapter 13: The Echo of Silver',
+                content: `The secret door behind the tapestry creaked open. Inside lay forgotten archives that hadn't seen daylight in over two centuries.`
+            }
+        ];
+        let currentSelectedChapterId = 'chap-14';
+
+        const PUBLIC_SETTINGS_DOC = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config');
+        const PUBLIC_FEEDBACK_COL = collection(db, 'artifacts', appId, 'public', 'data', 'submissions');
+        const PUBLIC_VIBES_DOC = doc(db, 'artifacts', appId, 'public', 'data', 'polls', 'vibes');
+        const PUBLIC_CHAPTERS_DOC = doc(db, 'artifacts', appId, 'public', 'data', 'content', 'chapters');
+
+        async function initAuthAndListeners() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                    user = userCredential.user;
+                } else {
+                    const userCredential = await signInAnonymously(auth);
+                    user = userCredential.user;
+                }
+            } catch (err) {
+                console.warn("Auth initialization fallback:", err);
+            }
+
+            onSnapshot(PUBLIC_SETTINGS_DOC, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    applySettingsToUI(data);
+                }
+            }, (error) => console.error("Settings Sync Error:", error));
+
+            onSnapshot(PUBLIC_CHAPTERS_DOC, (docSnap) => {
+                if (docSnap.exists() && docSnap.data().list) {
+                    activeChapters = docSnap.data().list;
+                    renderChaptersUI();
+                } else {
+                    renderChaptersUI();
+                }
+            }, (error) => {
+                console.error("Chapters Sync Error:", error);
+                renderChaptersUI();
+            });
+
+            onSnapshot(PUBLIC_FEEDBACK_COL, (querySnap) => {
+                const list = [];
+                querySnap.forEach((doc) => {
+                    list.push({ id: doc.id, ...doc.data() });
+                });
+                list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                activeSubmissions = list;
+                renderSubmissions();
+                updateNotificationBadge();
+            }, (error) => console.error("Feedback Sync Error:", error));
+
+            onSnapshot(PUBLIC_VIBES_DOC, (docSnap) => {
+                if (docSnap.exists()) {
+                    const counts = docSnap.data();
+                    for (const key in counts) {
+                        const el = document.getElementById(`count-${key}`);
+                        if (el) el.textContent = counts[key];
+                    }
+                }
+            }, (error) => console.error("Vibes Sync Error:", error));
+        }
+
+        function renderChaptersUI() {
+            const readerSelect = document.getElementById('readerChapterSelector');
+            const authorSelect = document.getElementById('authorChapterSelect');
+
+            if (!activeChapters || activeChapters.length === 0) {
+                readerSelect.innerHTML = `<option value="">No chapters added yet</option>`;
+                authorSelect.innerHTML = `<option value="">No chapters added yet</option>`;
+                document.getElementById('chapterContentDisplay').innerHTML = `<p class="italic text-stone-400">No chapter text available yet. Stay tuned!</p>`;
+                return;
+            }
+
+            readerSelect.innerHTML = activeChapters.map(ch => `
+                <option value="${ch.id}" ${ch.id === currentSelectedChapterId ? 'selected' : ''}>${escapeHtml(ch.title)}</option>
+            `).join('');
+
+            authorSelect.innerHTML = activeChapters.map(ch => `
+                <option value="${ch.id}">${escapeHtml(ch.title)}</option>
+            `).join('');
+
+            const currentCh = activeChapters.find(ch => ch.id === currentSelectedChapterId) || activeChapters[0];
+            if (currentCh) {
+                currentSelectedChapterId = currentCh.id;
+                document.getElementById('activeChapterTitle').textContent = currentCh.title;
+                const formattedHtml = formatStoryText(currentCh.content || "Chapter draft empty.");
+                document.getElementById('chapterContentDisplay').innerHTML = formattedHtml;
+            }
+
+            const chapterFormSelect = document.getElementById('chapterSelect');
+            if (chapterFormSelect) {
+                chapterFormSelect.innerHTML = activeChapters.map(ch => `
+                    <option value="${escapeHtml(ch.title)}">${escapeHtml(ch.title)}</option>
+                `).join('') + `<option value="General / Overall Book">General / Overall WIP</option>`;
+            }
+        }
+
+        window.switchReadingChapter = function(chapterId) {
+            currentSelectedChapterId = chapterId;
+            renderChaptersUI();
+        };
+
+        window.loadChapterIntoEditor = function(chapterId) {
+            const ch = activeChapters.find(c => c.id === chapterId);
+            if (ch) {
+                document.getElementById('editChapterTitleInput').value = ch.title || '';
+                document.getElementById('editChapterBodyInput').value = ch.content || '';
+            }
+        };
+
+        window.prepareNewChapter = function() {
+            const newId = 'chap-' + Date.now();
+            document.getElementById('editChapterTitleInput').value = `Chapter ${activeChapters.length + 1}: `;
+            document.getElementById('editChapterBodyInput').value = '';
+            document.getElementById('authorChapterSelect').value = '';
+            currentSelectedChapterId = newId;
+        };
+
+        window.saveAuthorChapter = async function() {
+            const title = document.getElementById('editChapterTitleInput').value.trim();
+            const body = document.getElementById('editChapterBodyInput').value.trim();
+
+            if (!title) {
+                alert("Please write a chapter title!");
+                return;
+            }
+
+            const authorSelectVal = document.getElementById('authorChapterSelect').value;
+            const targetId = authorSelectVal || currentSelectedChapterId || ('chap-' + Date.now());
+
+            const existingIdx = activeChapters.findIndex(c => c.id === targetId);
+            if (existingIdx >= 0) {
+                activeChapters[existingIdx] = { id: targetId, title: title, content: body };
+            } else {
+                activeChapters.unshift({ id: targetId, title: title, content: body });
+            }
+
+            currentSelectedChapterId = targetId;
+            renderChaptersUI();
+
+            try {
+                if (user) {
+                    await setDoc(PUBLIC_CHAPTERS_DOC, { list: activeChapters }, { merge: true });
+                }
+            } catch (err) {
+                console.error("Error saving chapters online:", err);
+            }
+        };
+
+        window.deleteCurrentChapter = async function() {
+            const authorSelectVal = document.getElementById('authorChapterSelect').value;
+            if (!authorSelectVal) return;
+
+            activeChapters = activeChapters.filter(c => c.id !== authorSelectVal);
+            if (activeChapters.length > 0) {
+                currentSelectedChapterId = activeChapters[0].id;
+            }
+            renderChaptersUI();
+
+            try {
+                if (user) {
+                    await setDoc(PUBLIC_CHAPTERS_DOC, { list: activeChapters });
+                }
+            } catch (err) {
+                console.error("Error deleting chapter online:", err);
+            }
+        };
+
+        window.saveAuthorSettings = async function() {
+            if (!user) return;
+            const settingsData = {
+                title: document.getElementById('editBookTitle').value,
+                author: document.getElementById('editAuthorName').value,
+                bio: document.getElementById('editBioText').value,
+                avatarUrl: document.getElementById('editAvatarUrl').value,
+                status: document.getElementById('editBookStatus').value,
+                genres: document.getElementById('editGenres').value,
+                gcPlatform: document.getElementById('editGcPlatform')?.value || 'instagram',
+                gcLabel: document.getElementById('editGcLabel')?.value || 'Join Reader Channel',
+                gcUrl: document.getElementById('editGcUrl').value,
+                socialUrl: document.getElementById('editSocialUrl').value,
+                chapterOptions: document.getElementById('editChapterOptions').value
+            };
+
+            applySettingsToUI(settingsData);
+
+            try {
+                await setDoc(PUBLIC_SETTINGS_DOC, settingsData, { merge: true });
+            } catch (e) {
+                console.error("Error saving settings to cloud:", e);
+            }
+        };
+
+        function applySettingsToUI(data) {
+            if (data.title) {
+                document.getElementById('bookTitleDisplay').textContent = data.title;
+                document.getElementById('editBookTitle').value = data.title;
+            }
+            if (data.author) {
+                document.getElementById('authorNameDisplay').textContent = data.author;
+                document.getElementById('editAuthorName').value = data.author;
+            }
+            if (data.bio) {
+                document.getElementById('bookBioDisplay').textContent = `"${data.bio}"`;
+                document.getElementById('editBioText').value = data.bio;
+            }
+            if (data.avatarUrl) {
+                document.getElementById('authorAvatar').src = data.avatarUrl;
+                document.getElementById('editAvatarUrl').value = data.avatarUrl;
+            }
+            if (data.status) {
+                document.getElementById('bookStatusBadge').textContent = data.status;
+                document.getElementById('editBookStatus').value = data.status;
+            }
+            if (data.gcUrl) {
+                document.getElementById('gcLink').href = data.gcUrl;
+                document.getElementById('editGcUrl').value = data.gcUrl;
+            }
+            if (data.gcLabel) {
+                document.getElementById('gcBtnLabel').textContent = data.gcLabel;
+                if (document.getElementById('editGcLabel')) document.getElementById('editGcLabel').value = data.gcLabel;
+            }
+            if (data.gcPlatform) {
+                if (document.getElementById('editGcPlatform')) document.getElementById('editGcPlatform').value = data.gcPlatform;
+                const gcIcon = document.getElementById('gcIcon');
+                if (gcIcon) {
+                    if (data.gcPlatform === 'instagram') gcIcon.className = 'fa-brands fa-instagram text-base text-pink-600';
+                    else if (data.gcPlatform === 'whatsapp') gcIcon.className = 'fa-brands fa-whatsapp text-base text-emerald-600';
+                    else if (data.gcPlatform === 'telegram') gcIcon.className = 'fa-brands fa-telegram text-base text-sky-500';
+                    else if (data.gcPlatform === 'wattpad') gcIcon.className = 'fa-solid fa-book text-base text-orange-500';
+                    else gcIcon.className = 'fa-solid fa-link text-base text-stone-700';
+                }
+            }
+            if (data.socialUrl) {
+                document.getElementById('socialLink').href = data.socialUrl;
+                document.getElementById('editSocialUrl').value = data.socialUrl;
+            }
+            if (data.genres) {
+                document.getElementById('editGenres').value = data.genres;
+                const genresContainer = document.getElementById('genreBadgesContainer');
+                const genres = data.genres.split(',').map(g => g.trim()).filter(g => g.length > 0);
+                genresContainer.innerHTML = genres.map(g => `<span class="px-2.5 py-0.5 bg-stone-100 text-stone-600 rounded-full text-[10px] font-medium border border-stone-200">${escapeHtml(g)}</span>`).join('');
+            }
+        }
+
+        window.submitFeedback = async function(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Sending...`;
+
+            const nameInput = document.getElementById('readerName').value.trim();
+            const chapterInput = document.getElementById('chapterSelect').value;
+            const textInput = document.getElementById('feedbackText').value.trim();
+
+            if (!textInput) return;
+
+            const newSubmission = {
+                name: nameInput || "Anonymous Reader",
+                chapter: chapterInput,
+                tags: selectedTags.length > 0 ? [...selectedTags] : ["General Note"],
+                rating: currentRating,
+                text: textInput,
+                timestamp: Date.now(),
+                formattedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                read: false
+            };
+
+            try {
+                if (user) {
+                    await addDoc(PUBLIC_FEEDBACK_COL, newSubmission);
+                }
+            } catch (err) {
+                console.error("Cloud submit failed, pushing local:", err);
+                activeSubmissions.unshift(newSubmission);
+                renderSubmissions();
+            }
+
+            document.getElementById('readerFeedbackForm').reset();
+            selectedTags = [];
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            setRating(4);
+
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane text-[10px]"></i> <span>Send Notes To Vivisha</span>`;
+
+            document.getElementById('successModal').classList.remove('hidden');
+        };
+
+        window.voteVibe = async function(button, type) {
+            const countSpan = document.getElementById(`count-${type}`);
+            let count = parseInt(countSpan.textContent || '0') + 1;
+            countSpan.textContent = count;
+            button.classList.add('border-stone-900', 'bg-stone-200');
+
+            try {
+                if (user) {
+                    const updateObj = {};
+                    updateObj[type] = count;
+                    await setDoc(PUBLIC_VIBES_DOC, updateObj, { merge: true });
+                }
+            } catch (e) {
+                console.error("Vibe vote update error:", e);
+            }
+        };
+
+        function updateNotificationBadge() {
+            const unread = activeSubmissions.filter(s => !s.read).length;
+            const badge = document.getElementById('unreadNotifBadge');
+            if (unread > 0 && !isAuthorDashboardView) {
+                badge.textContent = unread > 99 ? '99+' : unread;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        window.markAllAsRead = function() {
+            activeSubmissions.forEach(sub => {
+                sub.read = true;
+                if (sub.id && user) {
+                    updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'submissions', sub.id), { read: true }).catch(() => {});
+                }
+            });
+            renderSubmissions();
+            updateNotificationBadge();
+        };
+
+        function renderSubmissions() {
+            const listContainer = document.getElementById('submissionsList');
+            const countBadge = document.getElementById('submissionCountBadge');
+
+            countBadge.textContent = activeSubmissions.length;
+
+            if (activeSubmissions.length === 0) {
+                listContainer.innerHTML = `<div class="text-center py-8 text-xs text-stone-400">No reader notes yet. Share your bio link on Instagram or Wattpad!</div>`;
+                return;
+            }
+
+            listContainer.innerHTML = activeSubmissions.map(sub => `
+                <div class="p-4 rounded-2xl border transition-all ${sub.read ? 'bg-white border-stone-200' : 'bg-amber-50/40 border-amber-200/80 shadow-sm'} space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-1.5">
+                            ${!sub.read ? '<span class="w-2 h-2 rounded-full bg-amber-600"></span>' : ''}
+                            <span class="font-bold text-stone-900">${escapeHtml(sub.name)}</span>
+                        </div>
+                        <span class="text-[10px] text-stone-400">${sub.formattedTime || 'Recently'}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[10px] font-semibold">${escapeHtml(sub.chapter)}</span>
+                        ${(sub.tags || []).map(t => `<span class="px-2 py-0.5 rounded-full bg-stone-200/60 text-stone-700 text-[10px] font-semibold">${escapeHtml(t)}</span>`).join('')}
+                    </div>
+                    <p class="text-xs text-stone-700 leading-relaxed italic">"${escapeHtml(sub.text)}"</p>
+                </div>
+            `).join('');
+        }
+
+        window.toggleTag = function(btn, tag) {
+            if (selectedTags.includes(tag)) {
+                selectedTags = selectedTags.filter(t => t !== tag);
+                btn.classList.remove('selected');
+            } else {
+                selectedTags.push(tag);
+                btn.classList.add('selected');
+            }
+        };
+
+        window.setRating = function(rating) {
+            currentRating = rating;
+            const stars = document.getElementById('starRating').children;
+            for (let i = 0; i < stars.length; i++) {
+                stars[i].className = i < rating ? "fa-solid fa-star cursor-pointer" : "fa-regular fa-star cursor-pointer text-stone-300";
+            }
+        };
+
+        window.handlePfpUpload = function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('authorAvatar').src = e.target.result;
+                    document.getElementById('editAvatarUrl').value = e.target.result;
+                    window.saveAuthorSettings();
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        window.setPresetPfp = function(url) {
+            document.getElementById('editAvatarUrl').value = url;
+            document.getElementById('authorAvatar').src = url;
+            window.saveAuthorSettings();
+        };
+
+        window.toggleAuthorView = function() {
+            isAuthorDashboardView = !isAuthorDashboardView;
+            const readerChapterSection = document.getElementById('chapterReaderSection');
+            const feedbackSection = document.getElementById('feedbackFormSection');
+            const dashboardSection = document.getElementById('authorDashboardSection');
+            const btnText = document.getElementById('viewBtnText');
+
+            if (isAuthorDashboardView) {
+                readerChapterSection.classList.add('hidden');
+                feedbackSection.classList.add('hidden');
+                dashboardSection.classList.remove('hidden');
+                btnText.textContent = "Reader View Mode";
+                window.markAllAsRead();
+                if (activeChapters.length > 0) {
+                    loadChapterIntoEditor(activeChapters[0].id);
+                }
+            } else {
+                dashboardSection.classList.add('hidden');
+                readerChapterSection.classList.remove('hidden');
+                feedbackSection.classList.remove('hidden');
+                btnText.textContent = "Author Control Panel";
+            }
+        };
+
+        window.copyBioLink = function() {
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = window.location.href;
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            const btn = event.currentTarget;
+            const orig = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-check text-green-600"></i> Copied!`;
+            setTimeout(() => { btn.innerHTML = orig; }, 2000);
+        };
+
+        window.closeModal = function() {
+            document.getElementById('successModal').classList.add('hidden');
+        };
+
+        function formatStoryText(rawText) {
+            if (!rawText) return '<p class="italic text-stone-400">Chapter draft empty.</p>';
+            
+            let html = escapeHtml(rawText);
+            
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+            
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+            
+            return html;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        window.addEventListener('load', initAuthAndListeners);
+    </script>
+</body>
+</html>
